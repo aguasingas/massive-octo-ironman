@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the Properties for sale feature.
+ */
+
+include_once 'properties_for_sale.features.inc';

@@ -1,0 +1,13 @@
+name = Properties for sale
+core = 7.x
+package = PZ Realtors
+version = 7.x-1.0
+project = properties_for_sale
+dependencies[] = ctools
+dependencies[] = strongarm
+features[ctools][] = strongarm:strongarm:1
+features[features_api][] = api:2
+features[variable][] = statistics_count_content_views
+features[variable][] = statistics_day_timestamp
+features[variable][] = statistics_enable_access_log
+features[variable][] = statistics_flush_accesslog_timer
