@@ -5,3 +5,19 @@
  */
 
 include_once 'properties_for_sale.features.inc';
+/**
+ * Implements hook_theme.
+ */
+function properties_for_sale_theme($existing, $type, $theme, $path) {
+  return array(
+    'properties_for_sale' => array(
+      'variables' => array(
+        'visits' => 0,
+        'favorites' => 0,
+        'offers' => 0,
+        'showings' => 0,
+      ),
+      'template' => 'properties-for-sale',
+    ),
+  );
+}
