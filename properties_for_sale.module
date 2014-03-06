@@ -5,6 +5,75 @@
  */
 
 include_once 'properties_for_sale.features.inc';
+
+function properties_for_sale_block_info() {
+  // This example comes from node.module.
+  $blocks['properties_for_sale'] = array(
+    'info' => t('Properties for sale'),
+  );
+
+  return $blocks;
+}
+
+function properties_for_sale_block_view($delta = '') {
+  // This example is adapted from node.module.
+  $block = array();
+
+  switch ($delta) {
+    case 'properties_for_sale':
+      $block['subject'] = t('Properties for sale');
+      $block['content'] = properties_for_sale_block_content(1838);
+      break;
+
+  }
+  return $block;
+}
+
+function properties_for_sale_block_content($nid = 0) {
+  //@todo: check if user is related to this property.
+  //@todo: create a hook_theme implementation.
+  //@todo: create a tpl.php.
+  $statistics = statistics_get($nid);
+//  $flag = flag_get_flag('favorite');
+  $flag = flag_get_counts('node', $nid);
+  // Offers made: webform with:
+  // title: Giv os dit bud
+  // nid = 212
+  // component id for original_nid => cid = 11
+  $result =
+  db_select('webform_submitted_data', 'data')
+    ->fields('data')
+    ->condition('nid', 212)
+    ->condition('cid', 11)
+    ->condition('data', $nid)
+    ->execute();
+
+  $n_offers = $result->rowCount();
+
+  // Showings requested: webform Book en fremvisning
+  // nid: 200
+  // component id for original_nid => cid = 8
+  $result =
+    db_select('webform_submitted_data', 'data')
+      ->fields('data')
+      ->condition('nid', 200)
+      ->condition('cid', 8)
+      ->condition('data', $nid)
+      ->execute();
+
+  $n_showings = $result->rowCount();
+
+  $output = array(
+    '#theme' => 'properties_for_sale',
+    '#visits' => $statistics['totalcount'] ? $statistics['totalcount'] : 0,
+    '#favorites' => $flag['favorite'] ? $flag['favorite'] : 0,
+    '#offers' => $n_offers ? $n_offers : 0,
+    '#showings' => $n_showings ? $n_showings : 0,
+  );
+
+  return $output;
+}
+
 /**
  * Implements hook_theme.
  */
