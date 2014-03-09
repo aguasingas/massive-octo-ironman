@@ -37,8 +37,13 @@ function properties_for_sale_block_content($nid = 0) {
   //@todo: check if user is related to this property.
   //@todo: create a hook_theme implementation.
   //@todo: create a tpl.php.
+  if ($nid) {
+    $node = node_load($nid);
+  }
+  else {
+    return '';
+  }
   $statistics = statistics_get($nid);
-//  $flag = flag_get_flag('favorite');
   $flag = flag_get_counts('node', $nid);
   // Offers made: webform with:
   // title: Giv os dit bud
@@ -81,6 +86,10 @@ function properties_for_sale_block_content($nid = 0) {
   $n_showings = $result->rowCount();
 
   $stats = properties_for_sale_get_statistics_by_day($nid);
+  // Social Sharing links: we're using the config for property links.
+  // It outputs an array of links compatible with theme_links.
+  $social_render = service_links_render($node, TRUE);
+  $social = theme('links', array('links' => $social_render));
 
   $output = array(
     '#theme' => 'properties_for_sale',
@@ -88,10 +97,43 @@ function properties_for_sale_block_content($nid = 0) {
     '#favorites' => $flag['favorite'] ? $flag['favorite'] : 0,
     '#offers' => $n_offers ? $n_offers : 0,
     '#showings' => $n_showings ? $n_showings : 0,
+    '#social' => $social,
     '#chart' => $stats,
   );
 
   return $output;
+}
+
+/**
+ * Returns an array of intervals with beginning and end timestamps for every day.
+ * @param int $ndays: number of days from today. Defaults to 7, a week.
+ */
+function _properties_for_sale_get_daily_timestamps($ndays = 7) {
+  $date_format = "d-m-Y 00:00:00";
+  $datestring = date($date_format, time());
+  $this_morning_timestamp = strtotime($datestring);
+  $intervals = array();
+  // today, we got beginning of the interval, but no end.
+  $intervals[]  = array(
+    'from' => $this_morning_timestamp,
+  );
+  // ok, we've used one day: the last one, today.
+  $ndays--;
+  $timestamp = $this_morning_timestamp;
+
+  for ($i = 0;$i < $ndays; $i++) {
+    $prev_timestamp = $timestamp;
+    $timestamp = $timestamp - (24 * 3600);
+    $current = array(
+      'from' => $timestamp,
+      'to' => $prev_timestamp,
+    );
+    // since we're going backwards,
+    // every new result goes in the first position, every time.
+    array_unshift($intervals, $current);
+  }
+
+  return $intervals;
 }
 
 function properties_for_sale_get_statistics_by_day($nid = 0) {
@@ -107,92 +149,52 @@ function properties_for_sale_get_statistics_by_day($nid = 0) {
     return 0;
   }
 
-  $output = array();
+  // Get the list of timestamp intervals
+  // from today to the beginning of the week.
+  $intervals = _properties_for_sale_get_daily_timestamps();
 
-  // let's get timestamp for this morning, and go backwards from there.
-  $date_format = "d-m-Y 00:00:00";
-  $datestring = date($date_format, time());
-  $this_morning_timestamp = strtotime($datestring);
-
-  $timestamp = $this_morning_timestamp;
-
+  // labels for the chart.
+  $labels = array();
+  // data for the chart.
+  $data = array();
+  // format we'll use for dates in labels
   $date_format_human = "M d";
-  $this_morning_human = date($date_format_human, $this_morning_timestamp);
-
-  $result = db_select('accesslog', 'a')
-    ->fields('a')
-    ->condition('path', 'node/' . $nid)
-    ->condition('timestamp', $timestamp, '>')
-    ->execute();
-
-  $output[$timestamp] = array(
-    'human' => date($date_format_human, $timestamp),
-    'nviews' => $result->rowCount(),
-  );
-
-  $data[$timestamp] = $result->rowCount();
-  $labels[$timestamp] = date($date_format_human, $timestamp);
-
-
-  for ($i = 0; $i < 7; $i++) {
-
-    $oldtimestamp = $timestamp;
-    $timestamp -= 24 * 3600;
-
-    $result =
+  foreach($intervals as $interval) {
+    $select =
       db_select('accesslog', 'a')
         ->fields('a')
         ->condition('path', 'node/' . $nid)
-        ->condition('timestamp', $oldtimestamp, '<')
-        ->condition('timestamp', $timestamp, '>')
-        ->execute();
-
-    $current = array(
-      'human' => date($date_format_human, $timestamp),
-      'nviews' => $result->rowCount(),
-    );
-    $output[$timestamp] = $current;
-
-    $data[$timestamp] = $result->rowCount();
-    $labels[$timestamp] = date($date_format_human, $timestamp);
-
+        ->condition('timestamp', $interval['from'], '>=');
+    // Last day (today) has still not ended, so it has not 'to'.
+    if (isset($interval['to'])) {
+      $select->condition('timestamp', $interval['to'], '<');
+    }
+    $result = $select->execute();
+    // we'll use the "from" timestamp as a key: the morning timestamp.
+    $data[$interval['from']] = $result->rowCount();
+    $labels[$interval['from']] = date($date_format_human, $interval['from']);
 
   }
-
-
-  $datestring2 = date($date_format, $this_morning_timestamp - (24 * 3600));
-
-  $a = 0;
-
-
+  // Google chart definition.
   $chart = array(
-    '#chart_id' => 'test_chart',
-    '#title' => chart_title(t('New visits'), 'blue', 15),
+    '#chart_id' => 'new_visits_chart',
+    '#title' => chart_title(t('New visits'), '0000ff', 15),
     '#type' => CHART_TYPE_LINE,
     '#size' => chart_size(695, 200),
     '#adjust_resolution' => TRUE,
   );
 
-  ksort($data);
-  ksort($labels);
-  $chart['#data']['fruits'] = $data;
-//  $chart['#data']['meats']  = array(2, 2, 4, 3, 1);
-//  $chart['#data']['dairy']  = array(5, 2, 3, 1, 2);
-
-//  $chart['#legends'][] = t('Fruits');
-//  $chart['#legends'][] = t('Meats');
-//  $chart['#legends'][] = t('Dairy');
+  $chart['#data']['visits'] = $data;
 
   $chart['#data_colors'][] = '0000ff';
 
+  // y axis, its range goes from 0 to the biggest item in data.
   $chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][0][] = chart_mixed_axis_range_label(0, max($data));
-//  $chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][1][] = chart_mixed_axis_label(t('Count'), 95);
 
-
+  // labels (dates) for the x axis.
   foreach ($labels as $label) {
     $chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label($label);
   }
-//  $chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][2][] = chart_mixed_axis_label(t('Days of the week'), count($labels));
 
   return  theme('chart', array('chart' => $chart));
 
@@ -210,6 +212,7 @@ function properties_for_sale_theme($existing, $type, $theme, $path) {
         'offers' => 0,
         'showings' => 0,
         'chart' => 0,
+        'social' => '',
       ),
       'template' => 'properties-for-sale',
     ),

@@ -1,3 +1,25 @@
+<?php
+/**
+ * @file properties-for-sale.tpl.php
+ *
+ * Template for the block "Properties for sale".
+ *
+ * Variables available:
+ *
+ *   $visits: Number of total visits.
+ *   $favorites: Number of favorites.
+ *   $offers: Number of offers.
+ *   $showings: Number of showings.
+ *   $chart: Img tag with a chart for visits for the past week.
+ *   $social: html with links to sharing services.
+ *
+ *
+ */
+if ($social) {?>
+<div class="social">
+  <?php print $social; ?>
+</div>
+<?php }?>
 <div class="numbers">
   <div class="visits">
     <div class="value"><?php print $visits; ?></div>
