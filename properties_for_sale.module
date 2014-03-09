@@ -22,6 +22,10 @@ function properties_for_sale_block_view($delta = '') {
   switch ($delta) {
     case 'properties_for_sale':
       $block['subject'] = t('Properties for sale');
+      // this block will be in user/uid/etc/etc
+      $uid = arg(1);
+      $account = user_load($uid);
+      $profiles = profile2_load_by_user($account);
       $block['content'] = properties_for_sale_block_content(1838);
       break;
 
@@ -63,15 +67,135 @@ function properties_for_sale_block_content($nid = 0) {
 
   $n_showings = $result->rowCount();
 
+  // Salgopstilling downloads: webform Documents.
+  // nid: 1940
+  // component id for original_nid => cid = 8
+  $result =
+    db_select('webform_submitted_data', 'data')
+      ->fields('data')
+      ->condition('nid', 200)
+      ->condition('cid', 8)
+      ->condition('data', $nid)
+      ->execute();
+
+  $n_showings = $result->rowCount();
+
+  $stats = properties_for_sale_get_statistics_by_day($nid);
+
   $output = array(
     '#theme' => 'properties_for_sale',
     '#visits' => $statistics['totalcount'] ? $statistics['totalcount'] : 0,
     '#favorites' => $flag['favorite'] ? $flag['favorite'] : 0,
     '#offers' => $n_offers ? $n_offers : 0,
     '#showings' => $n_showings ? $n_showings : 0,
+    '#chart' => $stats,
   );
 
   return $output;
+}
+
+function properties_for_sale_get_statistics_by_day($nid = 0) {
+  // Let's check if there are visits in general. If not, we can leave.
+  $result = db_select('accesslog', 'a')
+    ->fields('a')
+    ->condition('path', 'node/' . $nid)
+    ->execute();
+
+  $n_visits = $result->rowCount();
+
+  if (!$n_visits) {
+    return 0;
+  }
+
+  $output = array();
+
+  // let's get timestamp for this morning, and go backwards from there.
+  $date_format = "d-m-Y 00:00:00";
+  $datestring = date($date_format, time());
+  $this_morning_timestamp = strtotime($datestring);
+
+  $timestamp = $this_morning_timestamp;
+
+  $date_format_human = "M d";
+  $this_morning_human = date($date_format_human, $this_morning_timestamp);
+
+  $result = db_select('accesslog', 'a')
+    ->fields('a')
+    ->condition('path', 'node/' . $nid)
+    ->condition('timestamp', $timestamp, '>')
+    ->execute();
+
+  $output[$timestamp] = array(
+    'human' => date($date_format_human, $timestamp),
+    'nviews' => $result->rowCount(),
+  );
+
+  $data[$timestamp] = $result->rowCount();
+  $labels[$timestamp] = date($date_format_human, $timestamp);
+
+
+  for ($i = 0; $i < 7; $i++) {
+
+    $oldtimestamp = $timestamp;
+    $timestamp -= 24 * 3600;
+
+    $result =
+      db_select('accesslog', 'a')
+        ->fields('a')
+        ->condition('path', 'node/' . $nid)
+        ->condition('timestamp', $oldtimestamp, '<')
+        ->condition('timestamp', $timestamp, '>')
+        ->execute();
+
+    $current = array(
+      'human' => date($date_format_human, $timestamp),
+      'nviews' => $result->rowCount(),
+    );
+    $output[$timestamp] = $current;
+
+    $data[$timestamp] = $result->rowCount();
+    $labels[$timestamp] = date($date_format_human, $timestamp);
+
+
+  }
+
+
+  $datestring2 = date($date_format, $this_morning_timestamp - (24 * 3600));
+
+  $a = 0;
+
+
+  $chart = array(
+    '#chart_id' => 'test_chart',
+    '#title' => chart_title(t('New visits'), 'blue', 15),
+    '#type' => CHART_TYPE_LINE,
+    '#size' => chart_size(695, 200),
+    '#adjust_resolution' => TRUE,
+  );
+
+  ksort($data);
+  ksort($labels);
+  $chart['#data']['fruits'] = $data;
+//  $chart['#data']['meats']  = array(2, 2, 4, 3, 1);
+//  $chart['#data']['dairy']  = array(5, 2, 3, 1, 2);
+
+//  $chart['#legends'][] = t('Fruits');
+//  $chart['#legends'][] = t('Meats');
+//  $chart['#legends'][] = t('Dairy');
+
+  $chart['#data_colors'][] = '0000ff';
+
+  $chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][0][] = chart_mixed_axis_range_label(0, max($data));
+//  $chart['#mixed_axis_labels'][CHART_AXIS_Y_LEFT][1][] = chart_mixed_axis_label(t('Count'), 95);
+
+
+  foreach ($labels as $label) {
+    $chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label($label);
+  }
+//  $chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][2][] = chart_mixed_axis_label(t('Days of the week'), count($labels));
+
+  return  theme('chart', array('chart' => $chart));
+
 }
 
 /**
@@ -85,6 +209,7 @@ function properties_for_sale_theme($existing, $type, $theme, $path) {
         'favorites' => 0,
         'offers' => 0,
         'showings' => 0,
+        'chart' => 0,
       ),
       'template' => 'properties-for-sale',
     ),

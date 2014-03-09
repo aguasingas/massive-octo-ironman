@@ -16,3 +16,6 @@
     <div class="label"><?php print t('Showings requested'); ?></div>
   </div>
 </div>
+<div class="chart">
+  <?php print $chart; ?>
+</div>
