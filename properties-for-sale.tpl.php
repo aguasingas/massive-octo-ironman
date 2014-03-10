@@ -10,6 +10,7 @@
  *   $favorites: Number of favorites.
  *   $offers: Number of offers.
  *   $showings: Number of showings.
+ *   $downloads: Number of downloads.
  *   $chart: Img tag with a chart for visits for the past week.
  *   $social: html with links to sharing services.
  *
@@ -29,6 +30,10 @@ if ($social) {?>
   <div class="visits">
     <div class="value"><?php print $visits; ?></div>
     <div class="label"><?php print t('Visits'); ?></div>
+  </div>
+  <div class="downloads">
+    <div class="value"><?php print $downloads; ?></div>
+    <div class="label"><?php print t('Downloads'); ?></div>
   </div>
   <div class="favorites">
     <div class="value"><?php print $favorites; ?></div>

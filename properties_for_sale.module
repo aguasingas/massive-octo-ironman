@@ -41,8 +41,6 @@ function properties_for_sale_properties_dropdown_form($form, $form_state, $optio
 
 function properties_for_sale_block_content($nid = 0) {
   //@todo: check if user is related to this property.
-  //@todo: create a hook_theme implementation.
-  //@todo: create a tpl.php.
   // this block will be in user/uid/etc/etc
   $uid = arg(1);
   $account = user_load($uid);
@@ -104,16 +102,16 @@ function properties_for_sale_block_content($nid = 0) {
 
   // Salgopstilling downloads: webform Documents.
   // nid: 1940
-  // component id for original_nid => cid = 8
+  // component id for original_nid => cid = 9
   $result =
     db_select('webform_submitted_data', 'data')
       ->fields('data')
-      ->condition('nid', 200)
-      ->condition('cid', 8)
+      ->condition('nid', 1940)
+      ->condition('cid', 9)
       ->condition('data', $nid)
       ->execute();
 
-  $n_showings = $result->rowCount();
+  $n_downloads = $result->rowCount();
 
   $stats = properties_for_sale_get_statistics_by_day($nid);
   // Social Sharing links: we're using the config for property links.
@@ -137,6 +135,7 @@ function properties_for_sale_block_content($nid = 0) {
     '#favorites' => $flag['favorite'] ? $flag['favorite'] : 0,
     '#offers' => $n_offers ? $n_offers : 0,
     '#showings' => $n_showings ? $n_showings : 0,
+    '#downloads' => $n_downloads ? $n_downloads : 0,
     '#social' => $social,
     '#chart' => $stats,
     '#form' => $rendered_form,
@@ -252,6 +251,7 @@ function properties_for_sale_theme($existing, $type, $theme, $path) {
         'favorites' => 0,
         'offers' => 0,
         'showings' => 0,
+        'downloads' => 0,
         'chart' => 0,
         'social' => '',
         'form' => '',
