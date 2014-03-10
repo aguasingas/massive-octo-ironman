@@ -60,7 +60,11 @@ function properties_for_sale_block_content($nid = 0) {
     }
   }
 
-  $nid = current($nids);
+  // If we're loading via ajax, we'll have specified a nid.
+  // @todo: add ajax behavior according to: https://api.drupal.org/api/drupal/includes!ajax.inc/group/ajax/7 and examples module.
+  if ($nid == 0) {
+    $nid = current($nids);
+  }
 
   $form = drupal_get_form('properties_for_sale_properties_dropdown_form', $options);
   $rendered_form = drupal_render($form);
@@ -235,6 +239,8 @@ function properties_for_sale_get_statistics_by_day($nid = 0) {
   foreach ($labels as $label) {
     $chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label($label);
   }
+
+  drupal_add_js(drupal_get_path('module', 'properties_for_sale') . '/properties_for_sale.js');
 
   return  theme('chart', array('chart' => $chart));
 
