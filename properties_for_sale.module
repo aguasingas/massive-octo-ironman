@@ -22,21 +22,51 @@ function properties_for_sale_block_view($delta = '') {
   switch ($delta) {
     case 'properties_for_sale':
       $block['subject'] = t('Properties for sale');
-      // this block will be in user/uid/etc/etc
-      $uid = arg(1);
-      $account = user_load($uid);
-      $profiles = profile2_load_by_user($account);
-      $block['content'] = properties_for_sale_block_content(1838);
+      $block['content'] = properties_for_sale_block_content();
+
       break;
 
   }
   return $block;
 }
 
+function properties_for_sale_properties_dropdown_form($form, $form_state, $options){
+  $form = array();
+  $form['select'] = array(
+    '#type' => 'select',
+    '#options' => $options,
+  );
+  return $form;
+}
+
 function properties_for_sale_block_content($nid = 0) {
   //@todo: check if user is related to this property.
   //@todo: create a hook_theme implementation.
   //@todo: create a tpl.php.
+  // this block will be in user/uid/etc/etc
+  $uid = arg(1);
+  $account = user_load($uid);
+  $profiles = profile2_load_by_user($account);
+  if (isset($profiles['buyer'])) {
+    $items = field_get_items('profile2',$profiles['buyer'],'field_seller_properties_relation');
+    if ($items) {
+      $nids = array();
+      foreach ($items as $item) {
+        $nids[$item['target_id']] = $item['target_id'];
+      }
+      $nodes = entity_load('node', $nids);
+      $options = array();
+      foreach ($nodes as $node) {
+        $options[$node->nid] = $node->title;
+      }
+    }
+  }
+
+  $nid = current($nids);
+
+  $form = drupal_get_form('properties_for_sale_properties_dropdown_form', $options);
+  $rendered_form = drupal_render($form);
+
   if ($nid) {
     $node = node_load($nid);
   }
@@ -89,6 +119,16 @@ function properties_for_sale_block_content($nid = 0) {
   // Social Sharing links: we're using the config for property links.
   // It outputs an array of links compatible with theme_links.
   $social_render = service_links_render($node, TRUE);
+  $social_render[] = array(
+    'title' => t('My property page'),
+    'href' => 'node/' . $node->nid,
+    'attributes' => array(
+      'title' => t('My property page'),
+      'class' => array(
+        '0' => 'property-page',
+      )
+    )
+  );
   $social = theme('links', array('links' => $social_render));
 
   $output = array(
@@ -99,6 +139,7 @@ function properties_for_sale_block_content($nid = 0) {
     '#showings' => $n_showings ? $n_showings : 0,
     '#social' => $social,
     '#chart' => $stats,
+    '#form' => $rendered_form,
   );
 
   return $output;
@@ -145,9 +186,9 @@ function properties_for_sale_get_statistics_by_day($nid = 0) {
 
   $n_visits = $result->rowCount();
 
-  if (!$n_visits) {
-    return 0;
-  }
+//  if (!$n_visits) {
+//    return 0;
+//  }
 
   // Get the list of timestamp intervals
   // from today to the beginning of the week.
@@ -213,6 +254,7 @@ function properties_for_sale_theme($existing, $type, $theme, $path) {
         'showings' => 0,
         'chart' => 0,
         'social' => '',
+        'form' => '',
       ),
       'template' => 'properties-for-sale',
     ),

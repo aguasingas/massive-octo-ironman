@@ -15,6 +15,11 @@
  *
  *
  */
+if ($form) {?>
+<div class="form">
+  <?php print $form; ?>
+</div>
+<?php }
 if ($social) {?>
 <div class="social">
   <?php print $social; ?>
