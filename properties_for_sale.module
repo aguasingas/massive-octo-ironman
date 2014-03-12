@@ -29,12 +29,27 @@ function properties_for_sale_block_view($delta = '') {
   }
   return $block;
 }
+function properties_for_sale_properties_dropdown_form_callback($form, $form_state) {
+//  $text = $form_state['values']['html_command_example'];
+
+  $nid = $form_state['values']['select'];
+
+  $text = drupal_render(properties_for_sale_block_content($nid));
+
+  $commands = array();
+  $commands[] = ajax_command_html('#block-properties-for-sale-properties-for-sale', $text);
+//  $commands[] = ajax_command_replace("#html_status", "<div id='html_status'>Updated html_command_example with text=$text;  " . date('r') . "</div>");
+  return array('#type' => 'ajax', '#commands' => $commands);
+}
 
 function properties_for_sale_properties_dropdown_form($form, $form_state, $options){
   $form = array();
   $form['select'] = array(
     '#type' => 'select',
     '#options' => $options,
+    '#ajax' => array(
+      'callback' => 'properties_for_sale_properties_dropdown_form_callback',
+    ),
   );
   return $form;
 }
@@ -239,8 +254,6 @@ function properties_for_sale_get_statistics_by_day($nid = 0) {
   foreach ($labels as $label) {
     $chart['#mixed_axis_labels'][CHART_AXIS_X_BOTTOM][1][] = chart_mixed_axis_label($label);
   }
-
-  drupal_add_js(drupal_get_path('module', 'properties_for_sale') . '/properties_for_sale.js');
 
   return  theme('chart', array('chart' => $chart));
 
