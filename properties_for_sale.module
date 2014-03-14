@@ -71,8 +71,7 @@ function properties_for_sale_properties_dropdown_form($form, $form_state, $optio
 }
 
 function properties_for_sale_block_content($nid = 0) {
-  //@todo: check if user is related to this property.
-  // this block will be in user/uid/etc/etc
+  drupal_add_css(drupal_get_path('module', 'properties_for_sale') . '/stylesheets/properties_for_sale.css');
   $uid = arg(1);
   $account = user_load($uid);
   $profiles = profile2_load_by_user($account);

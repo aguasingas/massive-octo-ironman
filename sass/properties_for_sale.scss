@@ -1,0 +1,49 @@
+#properties-for-sale-statistics {
+  .form {
+    width: 420px;
+    float: left;
+    .form-select {
+      font-size: 1.1em;
+      padding: 20px;
+      width: 100%;
+    }
+  }
+  .social {
+    float: left;
+    ul.links {
+      overflow: hidden;
+      li {
+        width: 70px;
+        float: left;
+        display: inline;
+        margin-left: 20px;
+        a {
+          display: block;
+          width: 70px;
+          height: 70px;
+          background: url(../images/envelope.png) no-repeat 0 0;
+          overflow: hidden;
+          text-indent: -50000px;
+        }
+      }
+    }
+  }
+
+  .numbers {
+    clear: both;
+    overflow: hidden;
+    text-align: center;
+    .number {
+      float: left;
+      width: 19.5%;
+    }
+    .value {
+      font-size: 65px;
+      line-height: 1;
+    }
+    .label {
+      font-size: 1.1em;
+      line-height: 1;
+    }
+  }
+}

@@ -1,0 +1,56 @@
+/* line 2, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .form {
+  width: 420px;
+  float: left;
+}
+/* line 5, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .form .form-select {
+  font-size: 1.1em;
+  padding: 20px;
+  width: 100%;
+}
+/* line 11, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .social {
+  float: left;
+}
+/* line 13, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .social ul.links {
+  overflow: hidden;
+}
+/* line 15, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .social ul.links li {
+  width: 70px;
+  float: left;
+  display: inline;
+  margin-left: 20px;
+}
+/* line 20, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .social ul.links li a {
+  display: block;
+  width: 70px;
+  height: 70px;
+  background: url(../images/envelope.png) no-repeat 0 0;
+  overflow: hidden;
+  text-indent: -50000px;
+}
+/* line 32, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .numbers {
+  clear: both;
+  overflow: hidden;
+  text-align: center;
+}
+/* line 36, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .numbers .number {
+  float: left;
+  width: 19.5%;
+}
+/* line 40, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .numbers .value {
+  font-size: 65px;
+  line-height: 1;
+}
+/* line 44, ../sass/properties_for_sale.scss */
+#properties-for-sale-statistics .numbers .label {
+  font-size: 1.1em;
+  line-height: 1;
+}
